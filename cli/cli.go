@@ -5,4 +5,6 @@ const (
 	ExitBasicInvocation
 	ExitCreateServices
 	ExitExecuteLoader
+	ExitMissingNecessaryArgument
+	ExitInvalidArg
 )

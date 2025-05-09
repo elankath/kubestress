@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
+
 	"github.com/elankath/kubestress/api"
 	"github.com/elankath/kubestress/cli"
 	"github.com/elankath/kubestress/core"
 	flag "github.com/spf13/pflag"
 	"k8s.io/client-go/tools/clientcmd"
-	"log/slog"
-	"os"
 )
 
 func main() {
@@ -30,11 +31,11 @@ func main() {
 	case "cleanup":
 		exitCode, err = ExecCleanup(ctx)
 	default:
-		_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("%s: error: Unknown subcommand %q\n", command))
+		_, _ = fmt.Fprintf(os.Stderr, "%s: error: Unknown subcommand %q\n", api.ProgName, command)
 		os.Exit(cli.ExitBasicInvocation)
 	}
 	if exitCode > 0 {
-		slog.Info("error", command, err)
+		slog.Error("error", command, err)
 		os.Exit(exitCode)
 	}
 	slog.Info("DONE.", "command", command)
@@ -51,14 +52,39 @@ func ExecLoad(ctx context.Context) (exitCode int, err error) {
 		_, _ = fmt.Fprintln(os.Stderr, fmt.Sprintf("Usage: %s load <flags> <args>", api.ProgName))
 		_, _ = fmt.Fprintln(os.Stderr, "<flags>")
 		standardUsage()
-		_, _ = fmt.Fprintln(os.Stderr, "<args>: <process names to monitor>")
+		_, _ = fmt.Fprintln(os.Stderr, "<args>: <To be implemented>")
 	}
 
+	err = loadFlags.Parse(os.Args[2:])
+	if err != nil {
+		exitCode = cli.ExitBasicInvocation
+		return
+	}
+
+	if loadConfig.ScenarioName == "" {
+		err = fmt.Errorf("scenario name is mandatory")
+		exitCode = cli.ExitMissingNecessaryArgument
+		return
+	}
+
+	if loadConfig.KubeConfig == "" {
+		err = fmt.Errorf("kubeconfig is mandatory")
+		exitCode = cli.ExitMissingNecessaryArgument
+		return
+	}
+	if loadConfig.N == 0 {
+		err = fmt.Errorf("should have atleast one replica count")
+		exitCode = cli.ExitInvalidArg
+		return
+	}
 	loader, err := core.NewLoader(loadConfig)
+
 	if err != nil {
 		exitCode = cli.ExitCreateServices
 		return
 	}
+
+	slog.Info("Loader config is ", "loadConfig", loadConfig)
 
 	err = loader.Execute(ctx)
 	if err != nil {
