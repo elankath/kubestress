@@ -29,6 +29,9 @@ func NewLoader(cfg api.LoadConfig) (loader *Loader, err error) {
 		err = fmt.Errorf("%w: %w", api.ErrCreateLoader, err)
 		return
 	}
+	//TODO check for good values when load testing
+	clientCfg.QPS = 100
+	clientCfg.Burst = 200
 	loader = &Loader{
 		cfg: cfg,
 	}
@@ -66,7 +69,7 @@ func doCreateNode(ctx context.Context, client *kubernetes.Clientset, scenarioNam
 		return
 	}
 	if count%100 == 0 {
-		slog.Info("Created node", "scenarioName", scenarioName, "nodeName", node.Name, "count", count)
+		slog.Info("Created node", "scenarioName", scenarioName, "nodeName", newNode.Name, "count", count)
 	}
 }
 
