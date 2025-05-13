@@ -18,8 +18,8 @@ import (
 var contentFS embed.FS
 
 type ScenarioData struct {
-	PodSpecs  []corev1.Pod
-	NodeSpecs []corev1.Node
+	TemplatePods  []corev1.Pod
+	TemplateNodes []corev1.Node
 }
 
 func LoadServiceAccount() (*corev1.ServiceAccount, error) {
@@ -68,14 +68,14 @@ func LoadScenario(name string) (s ScenarioData, err error) {
 			if err != nil {
 				return
 			}
-			s.PodSpecs = append(s.PodSpecs, pod)
+			s.TemplatePods = append(s.TemplatePods, pod)
 		} else if strings.HasPrefix(entry.Name(), "node") {
 			var node corev1.Node
 			err = yamlDecoder.Decode(&node)
 			if err != nil {
 				return
 			}
-			s.NodeSpecs = append(s.NodeSpecs, node)
+			s.TemplateNodes = append(s.TemplateNodes, node)
 		}
 
 	}

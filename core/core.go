@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"github.com/alitto/pond/v2"
 	"log/slog"
 	"time"
 
@@ -53,40 +54,58 @@ func (l *Loader) createDefaultSA(ctx context.Context) error {
 	return nil
 }
 
+func doCreateNode(ctx context.Context, client *kubernetes.Clientset, scenarioName string, count int, node *corev1.Node) {
+	var err error
+	newNode, err := client.CoreV1().Nodes().Create(ctx, node, metav1.CreateOptions{})
+	if err != nil {
+		err = fmt.Errorf("cannot create node %q: %w", node.GetGenerateName(), err)
+		return
+	}
+	err = adjustNode(client, newNode.Name, newNode.Status)
+	if err != nil {
+		return
+	}
+
+	slog.Info("Created node", "scenarioName", scenarioName, "nodeName", node.Name, "count", count)
+}
+
+func doCreatePod(ctx context.Context, client *kubernetes.Clientset, scenarioName string, count int, pod *corev1.Pod) {
+	var err error
+	if pod.Namespace == "" {
+		pod.Namespace = "default"
+	}
+	newPod, err := client.CoreV1().Pods(pod.Namespace).Create(ctx, pod, metav1.CreateOptions{})
+	if err != nil {
+		err = fmt.Errorf("cannot create pod %q: %w", pod.GetGenerateName(), err)
+		return
+	}
+	slog.Info("Created pod", "scenarioName", scenarioName, "podName", newPod.Name, "count", count)
+}
+
 func (l *Loader) Execute(ctx context.Context) (err error) {
 	err = l.createDefaultSA(ctx)
 	if err != nil {
 		return
 	}
+	pool := pond.NewPool(100)
 	for i := range l.cfg.N {
-		var node *corev1.Node
-		var pod *corev1.Pod
-		for _, noSpec := range l.scenarioData.NodeSpecs {
-			node, err = l.client.CoreV1().Nodes().Create(ctx, &noSpec, metav1.CreateOptions{})
-			if err != nil {
-				err = fmt.Errorf("cannot create node %q: %w", node.GetGenerateName(), err)
-				return
-			}
-			err = adjustNode(l.client, node.Name, node.Status)
-			if err != nil {
-				return
-			}
-
-			slog.Info("Created node", "scenarioName", l.cfg.ScenarioName, "nodeName", node.Name, "count", i)
+		//var node *corev1.Node
+		//var pod *corev1.Pod
+		for _, n := range l.scenarioData.TemplateNodes {
+			//TODO: Please add error threshold and context cancelling
+			pool.Submit(func() {
+				doCreateNode(ctx, l.client, l.cfg.ScenarioName, i, &n)
+			})
 		}
-		for _, poSpec := range l.scenarioData.PodSpecs {
-			// slog.Info("Creating pod", "generateName", poSpec.GetGenerateName())
-			if poSpec.Namespace == "" {
-				poSpec.Namespace = "default"
-			}
-			pod, err = l.client.CoreV1().Pods(poSpec.Namespace).Create(ctx, &poSpec, metav1.CreateOptions{})
-			if err != nil {
-				err = fmt.Errorf("cannot create pod %q: %w", pod.GetGenerateName(), err)
-				return
-			}
-			slog.Info("Created pod", "scenarioName", l.cfg.ScenarioName, "podName", pod.Name, "count", i)
+		for _, p := range l.scenarioData.TemplatePods {
+			//TODO: Please add error threshold and context cancelling
+			pool.Submit(func() {
+				doCreatePod(ctx, l.client, l.cfg.ScenarioName, i, &p)
+			})
 		}
 	}
+	slog.Info("Waiting for pool routines to finish")
+	pool.StopAndWait()
 	return nil
 }
 
