@@ -14,18 +14,36 @@ import (
 
 //go:embed a/pod-p.yaml
 //go:embed a/node-p.yaml
-var content embed.FS
+//go:embed sa-default.yaml
+var contentFS embed.FS
 
 type ScenarioData struct {
 	PodSpecs  []corev1.Pod
 	NodeSpecs []corev1.Node
 }
 
+func LoadServiceAccount() (*corev1.ServiceAccount, error) {
+	data, err := fs.ReadFile(contentFS, "sa-default.yaml")
+	if err != nil {
+		slog.Error("error when reading file", "name", "sa-default.yaml", "error", err)
+		return nil, err
+	}
+	slog.Info("Loading spec", "name", "sa-default.yaml")
+	stringReader := strings.NewReader(string(data))
+	yamlDecoder := yaml.NewYAMLOrJSONDecoder(io.NopCloser(stringReader), 4096)
+	var sa corev1.ServiceAccount
+	err = yamlDecoder.Decode(&sa)
+	if err != nil {
+		return nil, err
+	}
+	return &sa, nil
+}
+
 func LoadScenario(name string) (s ScenarioData, err error) {
 	// scheme := runtime.NewScheme()
 	// corev1.AddToScheme(scheme)
 
-	files, err := fs.ReadDir(content, name)
+	files, err := fs.ReadDir(contentFS, name)
 	var data []byte
 	if err != nil {
 		return
@@ -35,7 +53,7 @@ func LoadScenario(name string) (s ScenarioData, err error) {
 		// if !entry.Type().IsRegular() {
 		// 	continue
 		// }
-		data, err = fs.ReadFile(content, path.Join(name, entry.Name()))
+		data, err = fs.ReadFile(contentFS, path.Join(name, entry.Name()))
 		if err != nil {
 			slog.Error("error when reading file", "name", entry.Name(), "error", err)
 			return

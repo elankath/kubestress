@@ -19,6 +19,7 @@ type Loader struct {
 	cfg          api.LoadConfig
 	client       *kubernetes.Clientset
 	scenarioData scenarios.ScenarioData
+	defaultSA    *corev1.ServiceAccount
 }
 
 func NewLoader(cfg api.LoadConfig) (loader *Loader, err error) {
@@ -36,10 +37,27 @@ func NewLoader(cfg api.LoadConfig) (loader *Loader, err error) {
 		err = fmt.Errorf("%w: %w", api.ErrCreateLoader, err)
 		return
 	}
+	loader.defaultSA, err = scenarios.LoadServiceAccount()
+	if err != nil {
+		err = fmt.Errorf("%w: %w", api.ErrCreateLoader, err)
+		return
+	}
 	return
 }
 
+func (l *Loader) createDefaultSA(ctx context.Context) error {
+	_, err := l.client.CoreV1().ServiceAccounts("default").Create(ctx, l.defaultSA, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("can not create default service account: %w", err)
+	}
+	return nil
+}
+
 func (l *Loader) Execute(ctx context.Context) (err error) {
+	err = l.createDefaultSA(ctx)
+	if err != nil {
+		return
+	}
 	for i := range l.cfg.N {
 		var node *corev1.Node
 		var pod *corev1.Pod
