@@ -30,8 +30,9 @@ func NewLoader(cfg api.LoadConfig) (loader *Loader, err error) {
 		return
 	}
 	//TODO check for good values when load testing
-	clientCfg.QPS = 100
-	clientCfg.Burst = 200
+	//TODO: pass as command line flags
+	clientCfg.QPS = 200
+	clientCfg.Burst = 400
 	loader = &Loader{
 		cfg: cfg,
 	}
@@ -93,7 +94,8 @@ func (l *Loader) Execute(ctx context.Context) (err error) {
 	if err != nil {
 		return
 	}
-	pool := pond.NewPool(100)
+	//TODO: calculate this value based on qps and burst
+	pool := pond.NewPool(600)
 	for i := range l.cfg.N {
 		//var node *corev1.Node
 		//var pod *corev1.Pod

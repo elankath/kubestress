@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  generateName: pa2-
+  labels:
+    app.kubernetes.io/name: "pa2"
+    app.kubernetes.io/component: "kubestress"
+spec:
+  terminationGracePeriodSeconds: 0
+  schedulerName: "default-scheduler"
+  preemptionPolicy: PreemptLowerPriority
+  containers:
+    - name: pause
+      image: registry.k8s.io/pause:3.5
+      resources:
+        requests:
+          cpu: 100m
+          memory: 3Gi

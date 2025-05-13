@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Node
 metadata:
-  generateName: p-
+  generateName: na1-
   labels:
     beta.kubernetes.io/arch: amd64
     beta.kubernetes.io/instance-type: m5.large

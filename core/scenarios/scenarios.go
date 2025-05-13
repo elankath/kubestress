@@ -12,9 +12,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-//go:embed a/pod-p.yaml
-//go:embed a/node-p.yaml
-//go:embed sa-default.yaml
+//go:embed a/*
+//go:embed *.yaml
 var contentFS embed.FS
 
 type ScenarioData struct {

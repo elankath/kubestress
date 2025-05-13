@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  generateName: p-
+  generateName: pa1-
   labels:
-    app.kubernetes.io/name: "p"
+    app.kubernetes.io/name: "pa1"
     app.kubernetes.io/component: "kubestress"
 spec:
   terminationGracePeriodSeconds: 0
