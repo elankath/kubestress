@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"runtime/debug"
 
 	"github.com/elankath/kubestress/api"
 	"github.com/elankath/kubestress/cli"
@@ -23,6 +24,13 @@ func main() {
 	var err error
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	info, ok := debug.ReadBuildInfo()
+	if ok {
+		fmt.Printf("App version: %s\n", info.Main.Version)
+	} else {
+		fmt.Println("Warn: binary build info not embedded")
+	}
 
 	command := os.Args[1]
 	switch command {
