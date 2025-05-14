@@ -32,7 +32,7 @@ func NewLoader(cfg api.LoadConfig) (loader *Loader, err error) {
 	}
 	//TODO check for good values when load testing
 	//TODO: pass as command line flags
-	clientCfg.QPS = 500
+	clientCfg.QPS = 1000
 	clientCfg.Burst = 500
 	clientCfg.ContentConfig = rest.ContentConfig{
 		ContentType:        "application/json",
