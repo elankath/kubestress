@@ -35,6 +35,7 @@ func LoadServiceAccount() (*corev1.ServiceAccount, error) {
 	if err != nil {
 		return nil, err
 	}
+	slog.Info("Loaded default ServiceAccount", "serviceAccount", sa)
 	return &sa, nil
 }
 
