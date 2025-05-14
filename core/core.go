@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/alitto/pond/v2"
+	"k8s.io/client-go/rest"
 	"log/slog"
 	"time"
 
@@ -33,6 +34,10 @@ func NewLoader(cfg api.LoadConfig) (loader *Loader, err error) {
 	//TODO: pass as command line flags
 	clientCfg.QPS = 500
 	clientCfg.Burst = 500
+	clientCfg.ContentConfig = rest.ContentConfig{
+		ContentType:        "application/json",
+		AcceptContentTypes: "application/json",
+	}
 	loader = &Loader{
 		cfg: cfg,
 	}
