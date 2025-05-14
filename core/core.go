@@ -74,7 +74,7 @@ func doCreateNode(ctx context.Context, client *kubernetes.Clientset, scenarioNam
 	if err != nil {
 		return
 	}
-	if count%100 == 0 {
+	if count%5000 == 0 {
 		slog.Info("Created node", "scenarioName", scenarioName, "nodeName", newNode.Name, "count", count)
 	}
 }
@@ -89,7 +89,7 @@ func doCreatePod(ctx context.Context, client *kubernetes.Clientset, scenarioName
 		err = fmt.Errorf("cannot create pod %q: %w", pod.GetGenerateName(), err)
 		return
 	}
-	if count%100 == 0 {
+	if count%5000 == 0 {
 		slog.Info("Created pod", "scenarioName", scenarioName, "podName", newPod.Name, "count", count)
 	}
 }
